@@ -217,7 +217,7 @@ def parse():
             offer_params = list(offer.findall('param'))
             params = dict()
             for i in range(len(offer.findall('param'))):
-                params[offer.findall('param')[i].attrib['name']] = offer.findall('param')[i].text
+                params[offer_params[i].attrib['name']] = offer_params[i].text
             offer_data = {
                 'id': offer.get('id'),
                 'available': offer.get('available'),
