@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as ET
-import threading
-import time
+# from . import parser2    -   можно вставить в код бота
 
 DUPLICATE_OFFER_DELETE_MESSAGE = "Был удален фид с дублирующимся id: {:d}."
 DUPLICATE_ELEMENT_DELETE_MESSAGE = "В предложении {:d} удалено дублирующееся поле <<{}>>."
@@ -9,40 +8,37 @@ NOT_FILLED_FIELD_MESSAGE = "В предложении {:d} поле <<{}>> не 
 INVALID_ELEMENT_VALUE_MESSAGE = "В предложении {:d} поле <<{}>> имеет недопустимое значение."
 INVALID_PARAMETER_VALUE_MESSAGE = "В предложении {:d} поле <<{}>> имеет недопустимое значение."
 
-def check_offer_fields(offers: ET.Element):
+file_path = 'yandex_feed.xml'
+
+def check_offers(root: ET.Element):
     """
     Проверяет атрибуты и параметры offers
     """
+    id_set = set()
+    
+    offers = root.findall('.//offer')
     for offer in offers:
         idx = offer.attrib['id']
         try:
             idx = int(idx)
         except ValueError:
             print("Поле <<id>> имеет недопустимое значение.")
-        # all_fields_filled = True
-        if id_check(idx, offer, id_set):
-            tag_check(idx, offer)
-            
+        if id_check(root, offer, idx, id_set):
+            tag_check(offer, idx)
 
-        # if not all_fields_filled:
-        #     pass
-
-def id_check(offer_id: int, offer: ET.Element, id_set: set) -> bool:
+def id_check(root: ET.Element, offer: ET.Element, offer_id: int, id_set: set) -> bool:
     """
     Ищет дублирующиеся id и удаляет их
     """
     if offer_id in id_set:
-        try:
-            root.find('.//offers').remove(offer)
-            print(DUPLICATE_OFFER_DELETE_MESSAGE.format(offer_id))
-            return False
-        except ValueError as e:
-            print(e)
+        root.find('.//offers').remove(offer)
+        print(DUPLICATE_OFFER_DELETE_MESSAGE.format(offer_id))
+        return False
     else:
         id_set.add(offer_id)
     return True
 
-def tag_check(idx: int, offer: ET.Element):
+def tag_check(offer: ET.Element, idx: int):
     """
     Проверяет поля тегов
     """
@@ -116,10 +112,10 @@ def tag_check(idx: int, offer: ET.Element):
                     tag_value = int(tag_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "barcode"))    
-    param_check(idx, params)
+    param_check(params, idx)
 
-def param_check(idx: int, params: ET.Element):
-    """
+def param_check(params: ET.Element, idx: int):
+    """_summary_
     Проверяет поля параметров
     """
     params_dict = dict()
@@ -177,29 +173,29 @@ def param_check(idx: int, params: ET.Element):
                 except ValueError:
                     print(INVALID_PARAMETER_VALUE_MESSAGE.format(idx, "Новинка"))
 
-tree = None
-while tree == None:
-    path = str(input("Введите путь к файлу: "))
+def file_to_tree(path: str) -> ET.ElementTree:
+    """
+    Парсит xml-файл
+    Arguments:
+        str: путь к файлу
+    Returns:
+        _type_: _description_
+    """
+    tree = None
+    tree = ET.parse(path)
+    return tree
+
+def parser():
     try:
-        tree = ET.parse(path)
+        tree = file_to_tree(file_path)
     except ET.ParseError:
-        print("Невозможно прочитать файл. Убедитесь, что файл имеет расширение xml и все теги определяются правильно.")
+        print("Невозможно прочитать файл. "\
+            "Убедитесь, что файл имеет расширение xml и все теги определяются правильно.")
     except FileNotFoundError:
         print("Файл не найден по данному адресу")
+    else:
+        root = tree.getroot()
+        check_offers(root)
+        tree.write('output_feed.xml', encoding='utf-8', xml_declaration=True)
 
-root = tree.getroot()
-# Находим все элементы offer
-id_set = set()
-offers = root.findall('.//offer')
-#root.remove(ET.Element(offers[0]))
-# Проверяем поля
-
-# event = threading.Event()
-# check_thread = threading.Thread(target=check_offer_fields, args=[offers])
-# bot_thread = threading.Thread(target=bot)
-# check_thread.start()
-# bot_thread.start()
-# bot_thread.join()
-# check_thread.join()
-check_offer_fields(offers)
-tree.write('output_feed.xml', encoding='utf-8', xml_declaration=True)
+parser()
