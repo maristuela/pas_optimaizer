@@ -3,7 +3,7 @@ import telebot
 import requests
 from urllib.parse import urlencode
 import xml.etree.ElementTree as ET
-from checking_service import check_offer_fields
+from checking_service import check_offers
 
 
 bot = telebot.TeleBot('7216725010:AAGgec15kB4cjSmIe3hlHouOiaYRqXe5EB4')
