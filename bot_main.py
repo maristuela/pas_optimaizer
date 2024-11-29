@@ -5,12 +5,7 @@ from io import BytesIO
 import telebot
 import sqlite3
 import os
-import requests
-from urllib.parse import urlencode
-import requests
-from urllib.parse import urlencode
 
-import pandas as pd
 import xml.etree.ElementTree as ET
 
 
@@ -211,17 +206,6 @@ def menu(id):
 
 def parse():
     EXCEL_TABLE_PATH = 'azz.xml'
-    # dataFlow = pd.read_excel(EXCEL_TABLE_PATH)
-
-    # dataFlow = pd.read_xml(EXCEL_TABLE_PATH)
-    # Парсинг XML
-    """
-    tree = etree.parse(EXCEL_TABLE_PATH)
-    root = tree.getroot()
-    for offer in root['offers']:
-        print(offer['price'])
-    """
-
     # Список для хранения информации о товарах
     offers_list = []
 
