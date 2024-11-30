@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
+from services_controller import *
 from services.spelling_service import *
 
-FILE_PATH = 'yandex_feed.xml'
 DUPLICATE_OFFER_DELETE_MESSAGE = "Был удален фид с дублирующимся id: {:d}."
 DUPLICATE_ELEMENT_DELETE_MESSAGE = "В предложении {:d} удалено дублирующееся поле <<{}>>."
 DUPLICATE_PARAMETER_DELETE_MESSAGE = "В предложении {:d} удалено дублирующееся поле <<{}>>."
@@ -36,6 +36,24 @@ def pricing(offer: ET.ElementTree, elements_dict: dict, oldprice: float, param_v
     offer.find('price').text = str(price)
     currency_id = elements_dict['currencyId']
     offer.find('currencyId').text = currency_id
+
+def check_offers(root: ET.Element):
+    """Проверяет атрибуты и параметры offers
+    """
+    id_set = set()
+    
+    offers = root.findall('.//offer')
+    for offer in offers:
+        idx = offer.attrib['id']
+        try:
+            idx = int(idx)
+        except ValueError:
+            print("Поле <<id>> имеет недопустимое значение.")
+        # for field in REQUIRED_FIELDS:
+        #     element = offer.find(field)
+        #     field_value = element.text.strip() if element is not None and element.text is not None else None
+        if id_check(root, offer, idx, id_set):
+            element_check(offer, idx)
 
 def element_check(offer: ET.Element, idx: int):
     """Проверяет поля тегов
@@ -184,3 +202,4 @@ def param_check(offer: ET.Element, elements_dict: dict, params: ET.Element, idx:
                 except ValueError:
                     print(INVALID_PARAMETER_VALUE_MESSAGE.format(idx, "Новинка"))
 
+# def tech_startup():

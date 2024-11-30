@@ -1,11 +1,25 @@
 import json
 import requests
+import xml.etree.ElementTree as ET
 from requests.exceptions import HTTPError
 
 API_ADDRESS = 'https://speller.yandex.net/services/spellservice.json/checkText'
 LANGUAGE = 'ru'
 OPTIONS = 526
 FORMAT = 'html'
+
+def descriptions_enumeration(root: ET.Element):
+    """Цикл по элементам
+    """
+    offers = root.findall('.//offer')
+    for offer in offers:
+        idx = offer.attrib['id']
+        try:
+            idx = int(idx)
+        except ValueError:
+            print("Поле <<id>> имеет недопустимое значение.")
+        description = offer.find('description').text
+        spelling_check(description)
 
 def spelling_check(raw_text: str) -> str:
     """Отправляет запрос для проверки орфографии
