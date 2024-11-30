@@ -11,8 +11,7 @@ INVALID_PARAMETER_VALUE_MESSAGE = "В предложении {:d} поле <<{}>
 file_path = 'yandex_feed.xml'
 
 def check_offers(root: ET.Element):
-    """
-    Проверяет атрибуты и параметры offers
+    """Проверяет атрибуты и параметры offers
     """
     id_set = set()
     
@@ -27,8 +26,7 @@ def check_offers(root: ET.Element):
             tag_check(offer, idx)
 
 def id_check(root: ET.Element, offer: ET.Element, offer_id: int, id_set: set) -> bool:
-    """
-    Ищет дублирующиеся id и удаляет их
+    """Ищет дублирующиеся id и удаляет их
     """
     if offer_id in id_set:
         root.find('.//offers').remove(offer)
@@ -39,8 +37,7 @@ def id_check(root: ET.Element, offer: ET.Element, offer_id: int, id_set: set) ->
     return True
 
 def tag_check(offer: ET.Element, idx: int):
-    """
-    Проверяет поля тегов
+    """Проверяет поля тегов
     """
     tags_dict = dict()
     params = list()
@@ -115,8 +112,7 @@ def tag_check(offer: ET.Element, idx: int):
     param_check(params, idx)
 
 def param_check(params: ET.Element, idx: int):
-    """_summary_
-    Проверяет поля параметров
+    """Проверяет поля параметров
     """
     params_dict = dict()
     for param in params:
@@ -174,12 +170,11 @@ def param_check(params: ET.Element, idx: int):
                     print(INVALID_PARAMETER_VALUE_MESSAGE.format(idx, "Новинка"))
 
 def file_to_tree(path: str) -> ET.ElementTree:
-    """
-    Парсит xml-файл
-    Arguments:
-        str: путь к файлу
-    Returns:
-        _type_: _description_
+    """Парсит xml-файл
+    
+    :param path: Путь к файлу
+    :return: :class:`Дерево элементов <ElementTree>`
+    :rtype: ElementTree
     """
     tree = None
     tree = ET.parse(path)
@@ -197,5 +192,3 @@ def parser():
         root = tree.getroot()
         check_offers(root)
         tree.write('output_feed.xml', encoding='utf-8', xml_declaration=True)
-
-parser()
