@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-# from . import parser2    -   можно вставить в код бота
+from services.spelling_service import *
 
 DUPLICATE_OFFER_DELETE_MESSAGE = "Был удален фид с дублирующимся id: {:d}."
 DUPLICATE_ELEMENT_DELETE_MESSAGE = "В предложении {:d} удалено дублирующееся поле <<{}>>."
@@ -9,21 +9,6 @@ INVALID_ELEMENT_VALUE_MESSAGE = "В предложении {:d} поле <<{}>> 
 INVALID_PARAMETER_VALUE_MESSAGE = "В предложении {:d} поле <<{}>> имеет недопустимое значение."
 
 file_path = 'yandex_feed.xml'
-
-def check_offers(root: ET.Element):
-    """Проверяет атрибуты и параметры offers
-    """
-    id_set = set()
-    
-    offers = root.findall('.//offer')
-    for offer in offers:
-        idx = offer.attrib['id']
-        try:
-            idx = int(idx)
-        except ValueError:
-            print("Поле <<id>> имеет недопустимое значение.")
-        if id_check(root, offer, idx, id_set):
-            tag_check(offer, idx)
 
 def id_check(root: ET.Element, offer: ET.Element, offer_id: int, id_set: set) -> bool:
     """Ищет дублирующиеся id и удаляет их
@@ -36,77 +21,78 @@ def id_check(root: ET.Element, offer: ET.Element, offer_id: int, id_set: set) ->
         id_set.add(offer_id)
     return True
 
-def tag_check(offer: ET.Element, idx: int):
+def element_check(offer: ET.Element, idx: int):
     """Проверяет поля тегов
     """
-    tags_dict = dict()
+    elements_dict = dict()
     params = list()
     for element in offer:
-        tag_name = element.tag
-        tag_value = element.text.strip() if element.text is not None else ''
+        element_name = element.tag
+        element_value = element.text.strip() if element.text is not None else ''
         
-        if tag_name == 'param':
+        if element_name == 'param':
             params += element
             continue
 
-        if tag_name in tags_dict.keys():
+        if element_name in elements_dict.keys():
             offer.remove(element)
-            print(DUPLICATE_ELEMENT_DELETE_MESSAGE.format(idx, tag_name))
+            print(DUPLICATE_ELEMENT_DELETE_MESSAGE.format(idx, element_name))
             continue
         else:
-            tags_dict[tag_name] = tag_value
+            elements_dict[element_name] = element_value
         
-        # Проверяем, заполнено ли поле
-        if not tag_value:
-            print(NOT_FILLED_FIELD_MESSAGE.format(idx, tag_name))
-            all_fields_filled = False
+        if not element_value:
+            print(NOT_FILLED_FIELD_MESSAGE.format(idx, element_name))
         
-        match tag_name:
+        match element_name:
             case 'price':
                 try:
-                    tag_value = float(tag_value)
+                    element_value = float(element_value)
                     # Код для корректировки цены по категории
-                    # if tags['categoryId']
+                    # if elements['categoryId']
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "price"))
             case 'oldprice':
                 try:
-                    tag_value = float(tag_value)
+                    element_value = float(element_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "oldprice"))
             case 'currencyId':
                 try:
-                    tag_value = str(tag_value)
+                    element_value = str(element_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "currencyId"))
             case 'categoryId':
                 try:
-                    tag_value = int(tag_value)
+                    element_value = int(element_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "categoryId"))
             case 'picture':
                 try:
-                    tag_value = str(tag_value)
+                    element_value = str(element_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "picture"))
             case 'name':
                 try:
-                    tag_value = str(tag_value)
+                    element_value = str(element_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "name"))
             case 'vendor':
                 try:
-                    tag_value = str(tag_value)
+                    element_value = str(element_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "vendor"))
             case 'description':
                 try:
-                    tag_value = str(tag_value)
+                    element_value = str(element_value)
+                    description_string = spelling_check(element_value)
+                    if description_string != '0':
+                        element.text = description_string
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "description"))
             case 'barcode':
                 try:
-                    tag_value = int(tag_value)
+                    element_value = int(element_value)
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "barcode"))    
     param_check(params, idx)
@@ -129,9 +115,6 @@ def param_check(params: ET.Element, idx: int):
 
         if not param_value:
             print(NOT_FILLED_FIELD_MESSAGE.format(idx, param_name))
-            all_fields_filled = False
-            #print(event.is_set())
-            #event.wait()
 
         match param_name:
             case 'Артикул':
@@ -153,7 +136,6 @@ def param_check(params: ET.Element, idx: int):
                 try:
                     param_value = float(param_value)
                     if param_value > 100:
-                        #param.tail =''
                         param.text = '0.0'
                         raise Exception("Скидка не может иметь значение больше 100. Значение обнулено.")
                     if param_value < 0:
@@ -163,32 +145,11 @@ def param_check(params: ET.Element, idx: int):
                     print(INVALID_PARAMETER_VALUE_MESSAGE.format(idx, "Скидка"))
                 except Exception as e:
                     print(e)
+                else:
+                    # Добавить поле oldprice
+                    pass
             case 'Новинка':
                 try:
                     param_value = str(param_value)
                 except ValueError:
                     print(INVALID_PARAMETER_VALUE_MESSAGE.format(idx, "Новинка"))
-
-def file_to_tree(path: str) -> ET.ElementTree:
-    """Парсит xml-файл
-    
-    :param path: Путь к файлу
-    :return: :class:`Дерево элементов <ElementTree>`
-    :rtype: ElementTree
-    """
-    tree = None
-    tree = ET.parse(path)
-    return tree
-
-def parser():
-    try:
-        tree = file_to_tree(file_path)
-    except ET.ParseError:
-        print("Невозможно прочитать файл. "\
-            "Убедитесь, что файл имеет расширение xml и все теги определяются правильно.")
-    except FileNotFoundError:
-        print("Файл не найден по данному адресу")
-    else:
-        root = tree.getroot()
-        check_offers(root)
-        tree.write('output_feed.xml', encoding='utf-8', xml_declaration=True)

@@ -1,9 +1,7 @@
-import technical_service
-import spelling_service
+import services_controller
 
 def main():
-    technical_service.parser()
-    print(spelling_service.spelling_check("Размир 28х47х29 Материол Venetian Замак из сатирированного металла под бронзу. &quot;Рояльное&quot; крепление боковых сторон к конструкции замка. Замок закрывается на ключ. Внутри – отделение с карманом на молнии и бизнес-блоком кармашками для мобильного телефона, визиток и петлями для ручек. Еще один карман на молнии – снаружи, сбоку модели. На донце – шесть металлических &quot;ножек&quot;."))
+    services_controller.parser()
     
 if __name__ == '__main__':
     main()

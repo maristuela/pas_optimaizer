@@ -6,7 +6,6 @@ API_ADDRESS = 'https://speller.yandex.net/services/spellservice.json/checkText'
 LANGUAGE = 'ru'
 OPTIONS = 526
 FORMAT = 'html'
-# CALLBACK = 'callback'
 
 def spelling_check(raw_text: str) -> str:
     """Отправляет запрос для проверки орфографии
@@ -16,22 +15,25 @@ def spelling_check(raw_text: str) -> str:
         lang = LANGUAGE,
         options = OPTIONS,
         format = FORMAT,
-        # callback = CALLBACK
     )
-    try:
-        response = requests.get(url=API_ADDRESS, params=query_params)
-        response.raise_for_status()
-    except HTTPError as http_err:
-        print(f'Ошибка подключения: {http_err}')
-    except Exception as err:
-        print(f'Неизвестная ошибка системы проверки орфографии: {err}')
-    else:
-        with open("response.json", "w", encoding='utf-8') as write_file:
-            json.dump(response.json(), write_file, indent=4, ensure_ascii=False)
-        return processing_spelling_errors(response.json(), raw_text)
+    while True:
+        try:
+            response = requests.get(url=API_ADDRESS, params=query_params)
+            response.raise_for_status()
+        except HTTPError as http_err:
+            print(f'Ошибка подключения: {http_err}')
+            continue
+        except Exception as err:
+            print(f'Неизвестная ошибка системы проверки орфографии: {err}')
+            continue
+        else:
+            json_array = response.json()
+            if json_array:
+                print(raw_text)
+                return processing_spelling_errors(json_array, raw_text)
+            return '0'
         
     
-
 def processing_spelling_errors(json_array: list, raw_text: str) -> str:
     """Обрабатывает орфографические ошибки
     """
@@ -58,5 +60,4 @@ def processing_spelling_errors(json_array: list, raw_text: str) -> str:
                 else:
                     break
             print("Неверный ввод")
-                
     return new_string
