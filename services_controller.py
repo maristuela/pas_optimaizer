@@ -1,17 +1,6 @@
 import xml.etree.ElementTree as ET
 from services.technical_service import *
 
-REQUIRED_FIELDS = [
-    'price',
-    'currencyId',
-    'categoryId',
-    'picture',
-    'name',
-    'vendor',
-    'description',
-    'barcode'
-]
-
 def file_to_tree(path: str) -> ET.ElementTree:
     """Парсит xml-файл
     
@@ -35,15 +24,15 @@ def check_offers(root: ET.Element):
             idx = int(idx)
         except ValueError:
             print("Поле <<id>> имеет недопустимое значение.")
-        for field in REQUIRED_FIELDS:
-            element = offer.find(field)
-            field_value = element.text.strip() if element is not None and element.text is not None else None
+        # for field in REQUIRED_FIELDS:
+        #     element = offer.find(field)
+        #     field_value = element.text.strip() if element is not None and element.text is not None else None
         if id_check(root, offer, idx, id_set):
             element_check(offer, idx)
 
 def parser():
     try:
-        tree = file_to_tree(file_path)
+        tree = file_to_tree(FILE_PATH)
     except ET.ParseError:
         print("Невозможно прочитать файл. "\
             "Убедитесь, что файл имеет расширение xml и все теги определяются правильно.")
