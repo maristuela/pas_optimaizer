@@ -1,6 +1,4 @@
 import xml.etree.ElementTree as ET
-from services_controller import *
-from services.spelling_service import *
 
 DUPLICATE_OFFER_DELETE_MESSAGE = "Был удален фид с дублирующимся id: {:d}."
 DUPLICATE_ELEMENT_DELETE_MESSAGE = "В предложении {:d} удалено дублирующееся поле <<{}>>."
@@ -127,9 +125,6 @@ def element_check(offer: ET.Element, idx: int):
             case 'description':
                 try:
                     element_value = str(element_value)
-                    # description_string = spelling_check(element_value)
-                    # if description_string != '0':
-                    #     element.text = description_string
                 except ValueError:
                     print(INVALID_ELEMENT_VALUE_MESSAGE.format(idx, "description"))
             case 'barcode':

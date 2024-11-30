@@ -18,8 +18,9 @@ def descriptions_enumeration(root: ET.Element):
             idx = int(idx)
         except ValueError:
             print("Поле <<id>> имеет недопустимое значение.")
-        description = offer.find('description').text
-        spelling_check(description)
+        description_element = offer.find('description')
+        corrected_description = spelling_check(description_element.text)
+        description_element.text = corrected_description
 
 def spelling_check(raw_text: str) -> str:
     """Отправляет запрос для проверки орфографии
